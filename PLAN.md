@@ -2,12 +2,12 @@
 
 ## 1. Project Overview & Context
 
-This project provides a full frontend CRUD interface for the Spring Boot Student Management backend service.
+This project provides a full frontend CRUD interface for the Spring Boot Student Management backend service, prepared for zero-configuration deployment to **Render.com** via Blueprint (`render.yaml`).
 
 ### 1.1 Backend API Analysis
 - **Framework**: Spring Boot 3 / Hibernate / PostgreSQL
 - **Base Endpoint**: `/zapata/students`
-- **Default Server Port**: `8080` (`http://localhost:8080`)
+- **Port**: Configurable via `PORT` env var (defaults to `8080`)
 - **Entity Model (`Student`)**:
   | Field | Type | Description |
   |---|---|---|
@@ -33,9 +33,11 @@ This project provides a full frontend CRUD interface for the Spring Boot Student
 - **Styling**: **Tailwind CSS** (utility-first styling).
 - **No Modals (Non-Modal UI)**:
   - **Inline Form Card**: The Add / Edit student form is directly embedded into the page as an interactive card.
-  - When editing a student, the card dynamically transitions to Edit mode, highlights, and populates with the selected student's data. A "Cancel Edit" button reverts to Add mode.
   - **Inline Delete Confirmation**: Deletion actions display an inline confirmation prompt (`Delete? [Yes] [X]`) directly within table rows, avoiding modal dialogs.
-- **Reverse Proxy**: Vite development server proxies requests to `/zapata` to `http://localhost:8080` to eliminate CORS issues.
+- **Render.com Deployment Specification (`render.yaml`)**:
+  - **Database**: Managed PostgreSQL instance (`student-db`), database `db_student`.
+  - **Backend**: Docker web service (`student-backend`) built with Eclipse Temurin JDK 21 Alpine multi-stage Dockerfile. Injects PostgreSQL credentials from `student-db`.
+  - **Frontend**: Static web service (`student-frontend`) running Vite React build, rewriting all routes to `/index.html` for client routing, and automatically referencing the backend host via `VITE_API_BASE_URL`.
 
 ---
 
@@ -44,14 +46,19 @@ This project provides a full frontend CRUD interface for the Spring Boot Student
 ```
 STUDENT-CRUD/
 ├── PLAN.md                          # Project context & architecture plan (this document)
+├── render.yaml                      # Render Blueprint (Backend + Frontend + PostgreSQL)
 ├── student/                         # Spring Boot Backend
+│   ├── Dockerfile                   # Multi-stage Docker build for Render
+│   ├── .dockerignore
 │   ├── src/main/java/com/zapata/... # Spring Boot source files
+│   ├── src/main/resources/
+│   │   └── application.properties   # Dynamic DB configuration (${DB_HOST}, etc.)
 │   └── pom.xml
 └── frontend/                        # Vite + React + Tailwind CSS client
     ├── public/
     ├── src/
     │   ├── api/
-    │   │   └── studentService.js    # API service calls (GET, POST, PUT, DELETE)
+    │   │   └── studentService.js    # API service calls (dynamic resolution for Render & local)
     │   ├── components/
     │   │   ├── Alert.jsx            # Feedback notification banner
     │   │   ├── Navbar.jsx           # App header & student counter
@@ -68,20 +75,13 @@ STUDENT-CRUD/
 
 ---
 
-## 4. Implementation Status
+## 4. How to Deploy to Render.com
 
-- [x] **Phase 1: Planning & Context Capture** (Documented in repo)
-- [x] **Phase 2: Project Scaffolding & Tailwind CSS Setup**
-  - Scaffolded Vite React JavaScript app in `frontend/`.
-  - Installed Tailwind CSS, `@tailwindcss/vite`, and `lucide-react`.
-  - Configured Vite reverse proxy for `/zapata` -> `http://localhost:8080`.
-- [x] **Phase 3: API Service Layer**
-  - Implemented `src/api/studentService.js` handling all CRUD operations.
-- [x] **Phase 4: Non-Modal Component Implementation**
-  - Implemented `Navbar` with live student count badge.
-  - Implemented `StudentForm` (inline card supporting Add and Edit with validation).
-  - Implemented `StudentTable` with row-level inline delete confirmation (no modals).
-  - Implemented `SearchBar` with real-time text and course dropdown filtering.
-  - Implemented `Alert` notification system.
-- [x] **Phase 5: App Integration & Build Verification**
-  - Built production bundle (`npm run build`) successfully with 0 errors.
+1. Go to your [Render Dashboard](https://dashboard.render.com).
+2. Click **New +** > **Blueprint**.
+3. Connect your repository: `https://github.com/zapatafranz/student_crud`.
+4. Render will parse [`render.yaml`](file:///C:/Users/Student-00/Desktop/ZAPATAFZ/DA3A/STUDENT-CRUD/render.yaml) and automatically provision:
+   - **`student-db`** (PostgreSQL Database)
+   - **`student-backend`** (Docker Web Service)
+   - **`student-frontend`** (Static Site with SPA routing)
+5. Click **Apply** to deploy all services together.
