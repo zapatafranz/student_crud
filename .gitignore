@@ -1,0 +1,14 @@
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Java / Maven / Backend
+student/target/
+student/.mvn/wrapper/maven-wrapper.jar
+
+# IDE & OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
